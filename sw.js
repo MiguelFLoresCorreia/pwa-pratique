@@ -52,14 +52,59 @@ self.addEventListener('fetch', (evt) => {
     console.log('sw intercepte la requête suivante via fetch', evt);
     console.log('url interceptée', evt.request.url);
 
-     // 4.7 : Récupérer les réponses depuis le cache
-     evt.respondWith(
+         evt.respondWith(	   
+
         caches.match(evt.request)
-            .then(cachedResponse => {
+	
+            .then(cachedResponse => {   
+	
                 if (cachedResponse) {
+	
+               		// identification de la requête trouvée dans le cache
+	
+                    console.log("url depuis le cache", evt.request.url);
+	
                     return cachedResponse;
+	
                 }
-                return fetch(evt.request);
-            })
+	
+                // 5.1 Stratégie de cache
+	
+                return fetch(evt.request).then(
+	
+                    // On récupère la requête
+	
+                    function(newResponse) {
+	
+                    	// identification de la requête ajoutée au cache
+	
+                        console.log("url depuis le réseau et mise en cache", evt.request.url);	                       	
+                        // Accès au cache
+	
+                        caches.open(cacheName).then(
+	
+                            function(cache){
+	
+                                // ajout du résultat de la requête au cache
+	
+                                cache.put(evt.request, newResponse);
+	
+                            }
+	
+                        );
+	
+                        // Utilisation de clone car on ne peut utiliser qu'une fois la réponse
+	
+                        return newResponse.clone();
+	
+                    }
+	
+                )
+	
+            }
+	
+        )
+	
     );
+	
 });
